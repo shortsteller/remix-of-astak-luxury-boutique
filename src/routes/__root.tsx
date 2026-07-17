@@ -112,6 +112,7 @@ function RootComponent() {
             <Outlet />
           </main>
           <Footer />
+          <ScrollToTop />
         </div>
         <Toaster position="bottom-center" theme="light" />
       </StoreProvider>
