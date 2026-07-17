@@ -1,6 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Heart, Menu, Search, ShoppingBag, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useStore } from "@/lib/store";
 
 const links = [
@@ -31,6 +32,7 @@ export function Navbar() {
   }, [pathname]);
 
   return (
+    <>
     <header
       className={`sticky top-0 z-50 w-full backdrop-blur-xl transition-all duration-500 ${
         scrolled ? "bg-background/85 border-b border-border/60" : "bg-background/60"
@@ -136,47 +138,52 @@ export function Navbar() {
       )}
 
       {/* Mobile menu overlay */}
-      <div
-        className={`fixed inset-0 z-[60] lg:hidden overflow-hidden transition-opacity duration-500 ${
-          open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-        }`}
-      >
-        <div
-          className="absolute inset-0 bg-foreground/40 backdrop-blur-sm"
-          onClick={() => setOpen(false)}
-        />
-        <aside
-          className={`absolute right-0 top-0 h-full w-[82%] max-w-sm bg-white text-foreground shadow-2xl transition-transform duration-500 ${
-            open ? "translate-x-0" : "translate-x-full"
-          }`}
-          style={{ boxShadow: "-20px 0 60px -20px rgba(0,0,0,0.25)" }}
-        >
-          <div className="flex items-center justify-between px-6 h-20 border-b border-border">
-            <span className="font-brand text-2xl text-primary">अस्तक</span>
-            <button
-              onClick={() => setOpen(false)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted"
-              aria-label="Close"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-          <nav className="flex flex-col p-6 gap-1 bg-white">
-            {links.map((l, i) => (
-              <Link
-                key={l.to}
-                to={l.to}
-                className="py-4 border-b border-border/60 text-sm uppercase tracking-[0.28em] text-foreground/80 hover:text-primary transition-colors animate-fade-up"
-                style={{ animationDelay: `${i * 70}ms` }}
-              >
-                {l.label}
-              </Link>
-            ))}
-            <p className="mt-10 font-accent text-3xl text-primary/80">Ethnic. Elegant.</p>
-            <p className="font-accent text-3xl text-primary/80 -mt-2">Exclusively yours.</p>
-          </nav>
-        </aside>
-      </div>
     </header>
+    {typeof document !== "undefined" &&
+      createPortal(
+        <div
+          className={`fixed inset-0 z-[60] lg:hidden overflow-hidden transition-opacity duration-500 ${
+            open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          }`}
+        >
+          <div
+            className="absolute inset-0 bg-foreground/40 backdrop-blur-sm"
+            onClick={() => setOpen(false)}
+          />
+          <aside
+            className={`absolute right-0 top-0 h-full w-[82%] max-w-sm bg-white text-foreground shadow-2xl transition-transform duration-500 ${
+              open ? "translate-x-0" : "translate-x-full"
+            }`}
+            style={{ boxShadow: "-20px 0 60px -20px rgba(0,0,0,0.25)" }}
+          >
+            <div className="flex items-center justify-between px-6 h-20 border-b border-border">
+              <span className="font-brand text-2xl text-primary">अस्तक</span>
+              <button
+                onClick={() => setOpen(false)}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <nav className="flex flex-col p-6 gap-1 bg-white">
+              {links.map((l, i) => (
+                <Link
+                  key={l.to}
+                  to={l.to}
+                  className="py-4 border-b border-border/60 text-sm uppercase tracking-[0.28em] text-foreground/80 hover:text-primary transition-colors animate-fade-up"
+                  style={{ animationDelay: `${i * 70}ms` }}
+                >
+                  {l.label}
+                </Link>
+              ))}
+              <p className="mt-10 font-accent text-3xl text-primary/80">Ethnic. Elegant.</p>
+              <p className="font-accent text-3xl text-primary/80 -mt-2">Exclusively yours.</p>
+            </nav>
+          </aside>
+        </div>,
+        document.body,
+      )}
+    </>
   );
 }
