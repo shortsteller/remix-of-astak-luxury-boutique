@@ -8,6 +8,7 @@ import { z } from "zod";
 
 const searchSchema = z.object({
   category: z.string().optional(),
+  q: z.string().optional(),
 });
 
 export const Route = createFileRoute("/catalog")({
@@ -22,10 +23,10 @@ export const Route = createFileRoute("/catalog")({
 });
 
 function Catalog() {
-  const { category: initialCategory } = Route.useSearch();
+  const { category: initialCategory, q: initialQuery } = Route.useSearch();
   const navigate = Route.useNavigate();
   const [category, setCategory] = useState<string>(initialCategory ?? "all");
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery ?? "");
   const [sort, setSort] = useState<"newest" | "asc" | "desc">("newest");
 
   const filtered = useMemo(() => {
