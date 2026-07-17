@@ -15,8 +15,8 @@ function EditProductPage() {
 
   return (
     <div className="container-luxe py-12 sm:py-16">
-      <Link to="/admin/products" className="inline-flex items-center gap-1.5 text-[0.65rem] uppercase tracking-[0.28em] text-muted-foreground hover:text-primary">
-        <ArrowLeft className="h-3 w-3" /> Products
+      <Link to="/admin/dashboard" className="inline-flex items-center gap-1.5 text-[0.65rem] uppercase tracking-[0.28em] text-muted-foreground hover:text-primary">
+        <ArrowLeft className="h-3 w-3" /> Dashboard
       </Link>
       <h1 className="mt-2 font-heading text-3xl sm:text-4xl">Edit Product</h1>
 
@@ -33,7 +33,7 @@ function EditProductPage() {
               try {
                 await updateProduct(id, input);
                 toast.success("Product updated");
-                navigate({ to: "/admin/products" });
+                navigate({ to: "/admin/dashboard" });
               } catch (err) {
                 toast.error(err instanceof Error ? err.message : "Update failed");
               }
