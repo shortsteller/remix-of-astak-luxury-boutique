@@ -16,6 +16,7 @@ import { Footer } from "../components/Footer";
 import { ScrollToTop } from "../components/ScrollToTop";
 import { StoreProvider } from "../lib/store";
 import { Toaster } from "sonner";
+import { AuthProvider } from "../lib/auth-context";
 
 function NotFoundComponent() {
   return (
@@ -105,6 +106,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
+      <AuthProvider>
       <StoreProvider>
         <div className="flex min-h-screen flex-col">
           <Navbar />
@@ -116,6 +118,7 @@ function RootComponent() {
         </div>
         <Toaster position="bottom-center" theme="light" />
       </StoreProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

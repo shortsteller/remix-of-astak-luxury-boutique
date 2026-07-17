@@ -1,6 +1,7 @@
 import { Heart, ShoppingBag, MessageCircle, Share2 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { useStore, type Product } from "@/lib/store";
-import { WHATSAPP_NUMBER } from "@/lib/products";
+import { WHATSAPP_NUMBER } from "@/lib/firebase";
 import { toast } from "sonner";
 
 export function ProductCard({ product }: { product: Product }) {
@@ -29,7 +30,11 @@ export function ProductCard({ product }: { product: Product }) {
 
   return (
     <article className="group relative flex flex-col rounded-lg bg-card overflow-hidden transition-all duration-500 hover:shadow-luxe hover:-translate-y-1">
-      <div className="relative aspect-[3/4] overflow-hidden bg-muted">
+      <Link
+        to="/product/$id"
+        params={{ id: product.id }}
+        className="relative aspect-[3/4] overflow-hidden bg-muted block"
+      >
         <img
           src={product.image}
           alt={product.name}
@@ -38,21 +43,23 @@ export function ProductCard({ product }: { product: Product }) {
           height={1024}
           className="h-full w-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-105"
         />
-        <button
-          onClick={() => toggleWishlist(product)}
+      </Link>
+      <button
+          onClick={(e) => { e.preventDefault(); toggleWishlist(product); }}
           aria-label="Wishlist"
           className={`absolute top-3 right-3 h-9 w-9 grid place-items-center rounded-full backdrop-blur-md bg-background/80 border border-border/60 transition-all duration-300 hover:scale-110 ${
             wished ? "text-destructive" : "text-foreground/70"
           }`}
         >
           <Heart className={`h-4 w-4 ${wished ? "fill-current" : ""}`} />
-        </button>
-      </div>
+      </button>
 
       <div className="flex flex-col flex-1 p-3 sm:p-4">
-        <h3 className="font-heading text-[0.9rem] sm:text-base leading-snug line-clamp-2 min-h-[2.4em]">
-          {product.name}
-        </h3>
+        <Link to="/product/$id" params={{ id: product.id }}>
+          <h3 className="font-heading text-[0.9rem] sm:text-base leading-snug line-clamp-2 min-h-[2.4em] hover:text-primary transition-colors">
+            {product.name}
+          </h3>
+        </Link>
         <p className="mt-1 sm:mt-2 font-heading text-base sm:text-lg text-primary">
           ₹{product.price.toLocaleString("en-IN")}
         </p>

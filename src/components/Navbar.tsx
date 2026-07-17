@@ -9,6 +9,7 @@ const links = [
   { to: "/catalog", label: "Catalog" },
   { to: "/about", label: "About" },
   { to: "/contact", label: "Contact Us" },
+  { to: "/admin/login", label: "Admin" },
 ] as const;
 
 export function Navbar() {
