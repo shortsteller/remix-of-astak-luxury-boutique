@@ -72,13 +72,13 @@ export function ProductForm({ initial, submitLabel, onSubmit }: Props) {
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="input-luxe"
+          className={fieldCls}
         />
       </Field>
 
       <div className="grid gap-6 sm:grid-cols-2">
         <Field label="Category">
-          <select value={category} onChange={(e) => setCategory(e.target.value)} className="input-luxe">
+          <select value={category} onChange={(e) => setCategory(e.target.value)} className={fieldCls}>
             {CATEGORIES.map((c) => (
               <option key={c.slug} value={c.slug}>{c.label}</option>
             ))}
@@ -92,7 +92,7 @@ export function ProductForm({ initial, submitLabel, onSubmit }: Props) {
             step="1"
             value={price}
             onChange={(e) => setPrice(e.target.value)}
-            className="input-luxe"
+            className={fieldCls}
           />
         </Field>
       </div>
@@ -102,7 +102,7 @@ export function ProductForm({ initial, submitLabel, onSubmit }: Props) {
           rows={5}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="input-luxe min-h-32 py-3"
+          className={`${fieldCls} min-h-32 py-3 rounded-2xl`}
         />
       </Field>
 
@@ -140,7 +140,7 @@ export function ProductForm({ initial, submitLabel, onSubmit }: Props) {
           <select
             value={stockStatus}
             onChange={(e) => setStockStatus(e.target.value as StockStatus)}
-            className="input-luxe"
+            className={fieldCls}
           >
             <option value="in-stock">In Stock</option>
             <option value="out-of-stock">Out of Stock</option>
@@ -180,3 +180,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </label>
   );
 }
+
+const fieldCls =
+  "w-full h-11 rounded-full border border-border bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30";
