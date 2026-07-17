@@ -24,8 +24,14 @@ function Home() {
               <p className="text-primary-foreground/60 text-[0.7rem] tracking-[0.5em] uppercase mb-6">
                 Kolkata, Est. Handcrafted
               </p>
-              <h1 className="font-brand text-primary-foreground text-6xl sm:text-8xl md:text-9xl leading-none">
-                अस्तक
+              <h1 className="flex justify-center leading-none">
+                <img
+                  src="/favicon.png"
+                  alt="अस्तक — Astak"
+                  width={512}
+                  height={512}
+                  className="h-48 w-48 sm:h-64 sm:w-64 md:h-80 md:w-80 object-contain rounded-2xl shadow-luxe"
+                />
               </h1>
               <p className="mt-6 font-accent text-3xl sm:text-4xl text-accent">
                 Ethnic. Elegant. Exclusively Yours.
