@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CATEGORIES } from "@/lib/store";
 import { PRODUCTS } from "@/lib/products";
 import { ProductCard } from "@/components/ProductCard";
@@ -28,6 +28,13 @@ function Catalog() {
   const [category, setCategory] = useState<string>(initialCategory ?? "all");
   const [query, setQuery] = useState(initialQuery ?? "");
   const [sort, setSort] = useState<"newest" | "asc" | "desc">("newest");
+
+  useEffect(() => {
+    setQuery(initialQuery ?? "");
+  }, [initialQuery]);
+  useEffect(() => {
+    setCategory(initialCategory ?? "all");
+  }, [initialCategory]);
 
   const filtered = useMemo(() => {
     let list = [...PRODUCTS];
