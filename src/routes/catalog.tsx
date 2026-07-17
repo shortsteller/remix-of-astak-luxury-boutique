@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CATEGORIES } from "@/lib/store";
 import { PRODUCTS } from "@/lib/products";
 import { ProductCard } from "@/components/ProductCard";
@@ -8,6 +8,7 @@ import { z } from "zod";
 
 const searchSchema = z.object({
   category: z.string().optional(),
+  q: z.string().optional(),
 });
 
 export const Route = createFileRoute("/catalog")({
@@ -22,11 +23,18 @@ export const Route = createFileRoute("/catalog")({
 });
 
 function Catalog() {
-  const { category: initialCategory } = Route.useSearch();
+  const { category: initialCategory, q: initialQuery } = Route.useSearch();
   const navigate = Route.useNavigate();
   const [category, setCategory] = useState<string>(initialCategory ?? "all");
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery ?? "");
   const [sort, setSort] = useState<"newest" | "asc" | "desc">("newest");
+
+  useEffect(() => {
+    setQuery(initialQuery ?? "");
+  }, [initialQuery]);
+  useEffect(() => {
+    setCategory(initialCategory ?? "all");
+  }, [initialCategory]);
 
   const filtered = useMemo(() => {
     let list = [...PRODUCTS];

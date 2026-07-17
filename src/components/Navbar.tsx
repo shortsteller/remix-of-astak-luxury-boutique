@@ -1,5 +1,5 @@
-import { Link, useRouterState } from "@tanstack/react-router";
-import { Heart, Menu, Search, ShoppingBag, X } from "lucide-react";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { ArrowRight, Heart, Menu, Search, ShoppingBag, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useStore } from "@/lib/store";
@@ -18,6 +18,14 @@ export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const { cartCount, wishlistCount } = useStore();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+
+  const submitSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const term = q.trim();
+    navigate({ to: "/catalog", search: term ? { q: term } : {} });
+    setSearchOpen(false);
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -65,16 +73,23 @@ export function Navbar() {
 
         {/* Center search */}
         <div className="hidden md:flex flex-1 justify-center">
-          <div className="relative w-full max-w-md">
+          <form onSubmit={submitSearch} className="relative w-full max-w-md">
             <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               type="search"
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search sarees, kurtas, dresses…"
-              className="w-full h-11 rounded-full border border-border bg-card/70 pl-11 pr-4 text-xs tracking-wider text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition"
+              className="w-full h-11 rounded-full border border-border bg-card/70 pl-11 pr-12 text-xs tracking-wider text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 transition"
             />
-          </div>
+            <button
+              type="submit"
+              aria-label="Search"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground hover:opacity-90 transition"
+            >
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </form>
         </div>
 
         {/* Right icons */}
@@ -123,7 +138,7 @@ export function Navbar() {
       {/* Mobile search drawer */}
       {searchOpen && (
         <div className="md:hidden border-t border-border/60 bg-background/95 px-5 py-4 animate-fade-in">
-          <div className="relative">
+          <form onSubmit={submitSearch} className="relative">
             <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               autoFocus
@@ -131,9 +146,16 @@ export function Navbar() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search…"
-              className="w-full h-11 rounded-full border border-border bg-card pl-11 pr-4 text-xs tracking-wider focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="w-full h-11 rounded-full border border-border bg-card pl-11 pr-12 text-xs tracking-wider focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
-          </div>
+            <button
+              type="submit"
+              aria-label="Search"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground hover:opacity-90 transition"
+            >
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </form>
         </div>
       )}
 
