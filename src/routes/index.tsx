@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { CATEGORIES } from "@/lib/store";
-import { featuredByCategory } from "@/lib/products";
+import { useProducts } from "@/lib/firestore-products";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -75,7 +75,8 @@ function Home() {
 }
 
 function CategoryBlock({ index, slug, label }: { index: number; slug: string; label: string }) {
-  const items = featuredByCategory(slug).slice(0, 4);
+  const { products } = useProducts();
+  const items = products.filter((p) => p.showOnHomepage && p.category === slug).slice(0, 4);
   return (
     <div className="animate-fade-up">
       {/* Heading */}
@@ -93,12 +94,12 @@ function CategoryBlock({ index, slug, label }: { index: number; slug: string; la
           {items.map((p) => (
             <Link
               key={p.id}
-              to="/catalog"
-              search={{ category: slug }}
+              to="/product/$id"
+              params={{ id: p.id }}
               className="group relative aspect-[3/4] overflow-hidden rounded-md bg-muted"
             >
               <img
-                src={p.image}
+                src={p.images[0]}
                 alt={p.name}
                 loading="lazy"
                 width={1024}
