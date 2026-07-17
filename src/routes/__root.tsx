@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
+import { ScrollToTop } from "../components/ScrollToTop";
 import { StoreProvider } from "../lib/store";
 import { Toaster } from "sonner";
 
@@ -111,6 +112,7 @@ function RootComponent() {
             <Outlet />
           </main>
           <Footer />
+          <ScrollToTop />
         </div>
         <Toaster position="bottom-center" theme="light" />
       </StoreProvider>
