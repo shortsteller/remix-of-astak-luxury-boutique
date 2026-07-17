@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { CATEGORIES } from "@/lib/store";
-import { PRODUCTS } from "@/lib/products";
+import { useProducts } from "@/lib/firestore-products";
 import { ProductCard } from "@/components/ProductCard";
 import { z } from "zod";
 
@@ -28,6 +28,7 @@ function Catalog() {
   const [category, setCategory] = useState<string>(initialCategory ?? "all");
   const [query, setQuery] = useState(initialQuery ?? "");
   const [sort, setSort] = useState<"newest" | "asc" | "desc">("newest");
+  const { products, loading } = useProducts();
 
   useEffect(() => {
     setQuery(initialQuery ?? "");
@@ -37,13 +38,19 @@ function Catalog() {
   }, [initialCategory]);
 
   const filtered = useMemo(() => {
-    let list = [...PRODUCTS];
+    let list = products.map((p) => ({
+      id: p.id,
+      name: p.name,
+      price: p.price,
+      image: p.images[0],
+      category: p.category,
+    }));
     if (category !== "all") list = list.filter((p) => p.category === category);
     if (query) list = list.filter((p) => p.name.toLowerCase().includes(query.toLowerCase()));
     if (sort === "asc") list.sort((a, b) => a.price - b.price);
     if (sort === "desc") list.sort((a, b) => b.price - a.price);
     return list;
-  }, [category, query, sort]);
+  }, [category, query, sort, products]);
 
   const selectCategory = (slug: string) => {
     setCategory(slug);
@@ -113,7 +120,9 @@ function Catalog() {
           {filtered.length} {filtered.length === 1 ? "piece" : "pieces"}
         </p>
 
-        {filtered.length === 0 ? (
+        {loading ? (
+          <p className="text-center text-xs uppercase tracking-[0.28em] text-muted-foreground py-24">Loading…</p>
+        ) : filtered.length === 0 ? (
           <EmptyState />
         ) : (
           <div className="grid gap-3 sm:gap-6 grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
