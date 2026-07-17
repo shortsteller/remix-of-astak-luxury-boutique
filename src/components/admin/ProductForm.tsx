@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { X } from "lucide-react";
+import { useRef, useState } from "react";
+import { ImagePlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { CATEGORIES } from "@/lib/store";
 import { uploadImagesToCloudinary } from "@/lib/cloudinary";
@@ -21,6 +21,7 @@ export function ProductForm({ initial, submitLabel, onSubmit }: Props) {
   const [showOnHomepage, setShowOnHomepage] = useState<boolean>(initial?.showOnHomepage ?? false);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const onFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -108,14 +109,32 @@ export function ProductForm({ initial, submitLabel, onSubmit }: Props) {
 
       <Field label="Product Images">
         <input
+          ref={fileInputRef}
           type="file"
           accept="image/*"
           multiple
-          onChange={(e) => onFiles(e.target.files)}
-          className="block text-xs"
+          onChange={(e) => {
+            onFiles(e.target.files);
+            // reset so re-selecting the same file re-triggers change
+            if (e.target) e.target.value = "";
+          }}
+          className="sr-only"
           disabled={uploading}
         />
-        {uploading && <p className="mt-2 text-xs text-muted-foreground">Uploading…</p>}
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="flex w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-background/60 px-6 py-8 text-center transition hover:border-primary/50 hover:bg-background disabled:opacity-60"
+        >
+          <ImagePlus className="h-5 w-5 text-muted-foreground" />
+          <span className="text-xs uppercase tracking-[0.24em] text-foreground/80">
+            {uploading ? "Uploading…" : "Tap to upload images"}
+          </span>
+          <span className="text-[0.65rem] text-muted-foreground">
+            PNG, JPG or WEBP · multiple allowed
+          </span>
+        </button>
         {images.length > 0 && (
           <div className="mt-4 grid grid-cols-3 sm:grid-cols-4 gap-3">
             {images.map((url) => (
