@@ -1,6 +1,11 @@
 import { CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET } from "./firebase";
 
-export async function uploadImageToCloudinary(file: File): Promise<string> {
+export interface CloudinaryUpload {
+  url: string;
+  publicId: string;
+}
+
+export async function uploadImageToCloudinary(file: File): Promise<CloudinaryUpload> {
   const form = new FormData();
   form.append("file", file);
   form.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
@@ -12,10 +17,10 @@ export async function uploadImageToCloudinary(file: File): Promise<string> {
     const text = await res.text().catch(() => "");
     throw new Error(`Cloudinary upload failed: ${res.status} ${text}`);
   }
-  const data = (await res.json()) as { secure_url: string };
-  return data.secure_url;
+  const data = (await res.json()) as { secure_url: string; public_id: string };
+  return { url: data.secure_url, publicId: data.public_id };
 }
 
-export async function uploadImagesToCloudinary(files: File[]): Promise<string[]> {
+export async function uploadImagesToCloudinary(files: File[]): Promise<CloudinaryUpload[]> {
   return Promise.all(files.map(uploadImageToCloudinary));
 }
