@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { CATEGORIES } from "@/lib/store";
-import { useProducts } from "@/lib/firestore-products";
+import { useProducts, getImageUrl } from "@/lib/firestore-products";
 import { ProductCard } from "@/components/ProductCard";
 import { z } from "zod";
 
