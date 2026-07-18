@@ -21,6 +21,7 @@ export function Navbar() {
   const { cartCount, wishlistCount } = useStore();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault();
