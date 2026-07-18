@@ -42,7 +42,7 @@ function Catalog() {
       id: p.id,
       name: p.name,
       price: p.price,
-      image: p.images[0],
+      image: getImageUrl(p.images[0]),
       category: p.category,
     }));
     if (category !== "all") list = list.filter((p) => p.category === category);
