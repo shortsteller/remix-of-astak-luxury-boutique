@@ -99,7 +99,7 @@ function CategoryBlock({ index, slug, label }: { index: number; slug: string; la
               className="group relative aspect-[3/4] overflow-hidden rounded-md bg-muted"
             >
               <img
-                src={p.images[0]}
+                src={getImageUrl(p.images[0])}
                 alt={p.name}
                 loading="lazy"
                 width={1024}
