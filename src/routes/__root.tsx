@@ -17,6 +17,7 @@ import { ScrollToTop } from "../components/ScrollToTop";
 import { StoreProvider } from "../lib/store";
 import { Toaster } from "sonner";
 import { AuthProvider } from "../lib/auth-context";
+import { ThemeProvider, useTheme } from "../lib/theme-provider";
 
 function NotFoundComponent() {
   return (
@@ -107,18 +108,27 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-      <StoreProvider>
-        <div className="flex min-h-screen flex-col">
-          <Navbar />
-          <main className="flex-1">
-            <Outlet />
-          </main>
-          <Footer />
-          <ScrollToTop />
-        </div>
-        <Toaster position="bottom-center" theme="light" />
-      </StoreProvider>
+        <StoreProvider>
+          <ThemeProvider>
+            <RootInner />
+          </ThemeProvider>
+        </StoreProvider>
       </AuthProvider>
     </QueryClientProvider>
+  );
+}
+
+function RootInner() {
+  const { theme } = useTheme();
+  return (
+    <div className="flex min-h-screen flex-col">
+      <Navbar />
+      <main className="flex-1">
+        <Outlet />
+      </main>
+      <Footer />
+      <ScrollToTop />
+      <Toaster position="bottom-center" theme={theme} />
+    </div>
   );
 }

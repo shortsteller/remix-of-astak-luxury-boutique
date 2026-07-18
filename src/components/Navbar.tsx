@@ -1,8 +1,9 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ArrowRight, Heart, Menu, Search, ShoppingBag, X } from "lucide-react";
+import { ArrowRight, Heart, Menu, Moon, Search, ShoppingBag, Sun, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useStore } from "@/lib/store";
+import { useTheme } from "@/lib/theme-provider";
 
 const links = [
   { to: "/", label: "Home" },
@@ -20,6 +21,7 @@ export function Navbar() {
   const { cartCount, wishlistCount } = useStore();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   const submitSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,6 +129,13 @@ export function Navbar() {
             )}
           </Link>
           <button
+            onClick={toggleTheme}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted transition"
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
+          <button
             onClick={() => setOpen(true)}
             className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted transition"
             aria-label="Menu"
@@ -174,7 +183,7 @@ export function Navbar() {
             onClick={() => setOpen(false)}
           />
           <aside
-            className={`absolute right-0 top-0 h-full w-[82%] max-w-sm bg-white text-foreground shadow-2xl transition-transform duration-500 ${
+            className={`absolute right-0 top-0 h-full w-[82%] max-w-sm bg-background text-foreground shadow-2xl transition-transform duration-500 ${
               open ? "translate-x-0" : "translate-x-full"
             }`}
             style={{ boxShadow: "-20px 0 60px -20px rgba(0,0,0,0.25)" }}
@@ -189,7 +198,7 @@ export function Navbar() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <nav className="flex flex-col p-6 gap-1 bg-white">
+            <nav className="flex flex-col p-6 gap-1 bg-background">
               {links.map((l, i) => (
                 <Link
                   key={l.to}
