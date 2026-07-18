@@ -6,6 +6,7 @@ import {
   deleteProduct,
   updateProduct,
   useProducts,
+  getImageUrl,
   type FirestoreProduct,
 } from "@/lib/firestore-products";
 import { useAuth } from "@/lib/auth-context";
@@ -197,7 +198,7 @@ function ProductAdminCard({ product }: { product: FirestoreProduct }) {
     <div className="rounded-xl border border-border bg-card overflow-hidden flex flex-col">
       <div className="relative aspect-square bg-muted">
         {product.images[0] && (
-          <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+          <img src={getImageUrl(product.images[0])} alt={product.name} className="w-full h-full object-cover" />
         )}
         <span
           className={`absolute top-3 left-3 text-[0.6rem] uppercase tracking-[0.2em] px-2 py-1 rounded-full ${

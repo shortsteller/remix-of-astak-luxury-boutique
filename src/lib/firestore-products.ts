@@ -16,13 +16,29 @@ import { db } from "./firebase";
 
 export type StockStatus = "in-stock" | "out-of-stock";
 
+export interface ProductImage {
+  url: string;
+  publicId: string;
+}
+
+/**
+ * Normalize a stored image entry. Legacy documents stored images as plain
+ * URL strings; new documents store `{ url, publicId }`. This helper lets
+ * consumers read either shape safely.
+ */
+export function getImageUrl(img: ProductImage | string | undefined): string {
+  if (!img) return "";
+  return typeof img === "string" ? img : img.url;
+}
+
 export interface FirestoreProduct {
   id: string;
   name: string;
   category: string;
   price: number;
   description: string;
-  images: string[];
+  // Legacy docs may still contain plain-string entries; use `getImageUrl` when rendering.
+  images: (ProductImage | string)[];
   stockStatus: StockStatus;
   showOnHomepage: boolean;
   createdAt?: Timestamp | null;

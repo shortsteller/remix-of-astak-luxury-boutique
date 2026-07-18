@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { CATEGORIES } from "@/lib/store";
-import { useProducts } from "@/lib/firestore-products";
+import { useProducts, getImageUrl } from "@/lib/firestore-products";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -99,7 +99,7 @@ function CategoryBlock({ index, slug, label }: { index: number; slug: string; la
               className="group relative aspect-[3/4] overflow-hidden rounded-md bg-muted"
             >
               <img
-                src={p.images[0]}
+                src={getImageUrl(p.images[0])}
                 alt={p.name}
                 loading="lazy"
                 width={1024}
