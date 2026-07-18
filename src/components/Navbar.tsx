@@ -198,7 +198,7 @@ export function Navbar() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <nav className="flex flex-col p-6 gap-1 bg-white">
+            <nav className="flex flex-col p-6 gap-1 bg-background">
               {links.map((l, i) => (
                 <Link
                   key={l.to}
