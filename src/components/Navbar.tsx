@@ -183,7 +183,7 @@ export function Navbar() {
             onClick={() => setOpen(false)}
           />
           <aside
-            className={`absolute right-0 top-0 h-full w-[82%] max-w-sm bg-white text-foreground shadow-2xl transition-transform duration-500 ${
+            className={`absolute right-0 top-0 h-full w-[82%] max-w-sm bg-background text-foreground shadow-2xl transition-transform duration-500 ${
               open ? "translate-x-0" : "translate-x-full"
             }`}
             style={{ boxShadow: "-20px 0 60px -20px rgba(0,0,0,0.25)" }}
