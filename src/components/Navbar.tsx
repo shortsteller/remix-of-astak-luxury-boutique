@@ -129,6 +129,13 @@ export function Navbar() {
             )}
           </Link>
           <button
+            onClick={toggleTheme}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted transition"
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
+          <button
             onClick={() => setOpen(true)}
             className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted transition"
             aria-label="Menu"
