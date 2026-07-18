@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Heart, MessageCircle, Share2, ShoppingBag } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useProduct } from "@/lib/firestore-products";
+import { useProduct, getImageUrl } from "@/lib/firestore-products";
 import { WHATSAPP_NUMBER } from "@/lib/firebase";
 import { CATEGORIES, useStore } from "@/lib/store";
 
@@ -42,13 +42,14 @@ function ProductDetails() {
 
   const catLabel = CATEGORIES.find((c) => c.slug === product.category)?.label ?? product.category;
   const wished = isWishlisted(product.id);
-  const active = product.images[activeIdx] ?? product.images[0];
+  const active = getImageUrl(product.images[activeIdx] ?? product.images[0]);
+  const firstImage = getImageUrl(product.images[0]);
 
   const cartProduct = {
     id: product.id,
     name: product.name,
     price: product.price,
-    image: product.images[0],
+    image: firstImage,
     category: product.category,
   };
 
@@ -88,7 +89,9 @@ function ProductDetails() {
           </div>
           {product.images.length > 1 && (
             <div className="mt-4 grid grid-cols-5 gap-2">
-              {product.images.map((url, i) => (
+              {product.images.map((img, i) => {
+                const url = getImageUrl(img);
+                return (
                 <button
                   key={url}
                   onClick={() => setActiveIdx(i)}
@@ -98,7 +101,8 @@ function ProductDetails() {
                 >
                   <img src={url} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
                 </button>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

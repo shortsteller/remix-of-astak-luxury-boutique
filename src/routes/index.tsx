@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { CATEGORIES } from "@/lib/store";
-import { useProducts } from "@/lib/firestore-products";
+import { useProducts, getImageUrl } from "@/lib/firestore-products";
 
 export const Route = createFileRoute("/")({
   head: () => ({
