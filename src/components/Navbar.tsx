@@ -1,8 +1,9 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { ArrowRight, Heart, Menu, Search, ShoppingBag, X } from "lucide-react";
+import { ArrowRight, Heart, Menu, Moon, Search, ShoppingBag, Sun, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useStore } from "@/lib/store";
+import { useTheme } from "@/lib/theme-provider";
 
 const links = [
   { to: "/", label: "Home" },
