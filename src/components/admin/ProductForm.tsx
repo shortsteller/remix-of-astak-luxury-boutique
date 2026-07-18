@@ -3,7 +3,8 @@ import { ImagePlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { CATEGORIES } from "@/lib/store";
 import { uploadImagesToCloudinary } from "@/lib/cloudinary";
-import type { ProductInput, StockStatus } from "@/lib/firestore-products";
+import type { ProductInput, ProductImage, StockStatus } from "@/lib/firestore-products";
+import { getImageUrl } from "@/lib/firestore-products";
 
 interface Props {
   initial?: Partial<ProductInput>;
@@ -16,7 +17,12 @@ export function ProductForm({ initial, submitLabel, onSubmit }: Props) {
   const [category, setCategory] = useState(initial?.category ?? CATEGORIES[0].slug);
   const [price, setPrice] = useState<string>(initial?.price != null ? String(initial.price) : "");
   const [description, setDescription] = useState(initial?.description ?? "");
-  const [images, setImages] = useState<string[]>(initial?.images ?? []);
+  const [images, setImages] = useState<ProductImage[]>(
+    // Normalize any legacy string entries into the new { url, publicId } shape.
+    (initial?.images ?? []).map((img) =>
+      typeof img === "string" ? { url: img, publicId: "" } : img,
+    ),
+  );
   const [stockStatus, setStockStatus] = useState<StockStatus>(initial?.stockStatus ?? "in-stock");
   const [showOnHomepage, setShowOnHomepage] = useState<boolean>(initial?.showOnHomepage ?? false);
   const [uploading, setUploading] = useState(false);
@@ -27,9 +33,9 @@ export function ProductForm({ initial, submitLabel, onSubmit }: Props) {
     if (!files || files.length === 0) return;
     setUploading(true);
     try {
-      const urls = await uploadImagesToCloudinary(Array.from(files));
-      setImages((prev) => [...prev, ...urls]);
-      toast.success(`Uploaded ${urls.length} image(s)`);
+      const uploaded = await uploadImagesToCloudinary(Array.from(files));
+      setImages((prev) => [...prev, ...uploaded]);
+      toast.success(`Uploaded ${uploaded.length} image(s)`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed");
     } finally {
@@ -37,7 +43,8 @@ export function ProductForm({ initial, submitLabel, onSubmit }: Props) {
     }
   };
 
-  const removeImage = (url: string) => setImages((prev) => prev.filter((u) => u !== url));
+  const removeImage = (url: string) =>
+    setImages((prev) => prev.filter((img) => img.url !== url));
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,12 +144,12 @@ export function ProductForm({ initial, submitLabel, onSubmit }: Props) {
         </button>
         {images.length > 0 && (
           <div className="mt-4 grid grid-cols-3 sm:grid-cols-4 gap-3">
-            {images.map((url) => (
-              <div key={url} className="relative aspect-square rounded-md overflow-hidden bg-muted border border-border">
-                <img src={url} alt="Product" className="w-full h-full object-cover" />
+            {images.map((img) => (
+              <div key={img.url} className="relative aspect-square rounded-md overflow-hidden bg-muted border border-border">
+                <img src={img.url} alt="Product" className="w-full h-full object-cover" />
                 <button
                   type="button"
-                  onClick={() => removeImage(url)}
+                  onClick={() => removeImage(img.url)}
                   className="absolute top-1 right-1 h-7 w-7 rounded-full bg-background/90 border border-border grid place-items-center hover:bg-destructive hover:text-destructive-foreground transition"
                   aria-label="Remove image"
                 >
