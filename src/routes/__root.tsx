@@ -17,6 +17,7 @@ import { ScrollToTop } from "../components/ScrollToTop";
 import { StoreProvider } from "../lib/store";
 import { Toaster } from "sonner";
 import { AuthProvider } from "../lib/auth-context";
+import { ThemeProvider, useTheme } from "../lib/theme-provider";
 
 function NotFoundComponent() {
   return (
