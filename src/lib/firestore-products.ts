@@ -1,7 +1,6 @@
 import {
   addDoc,
   collection,
-  deleteDoc,
   doc,
   getDoc,
   onSnapshot,
@@ -19,6 +18,11 @@ export type StockStatus = "in-stock" | "out-of-stock";
 export interface ProductImage {
   url: string;
   publicId: string;
+  /**
+   * Per-image (variant) stock status. Optional for backward compatibility;
+   * treat `undefined` as in stock.
+   */
+  inStock?: boolean;
 }
 
 /**
@@ -29,6 +33,26 @@ export interface ProductImage {
 export function getImageUrl(img: ProductImage | string | undefined): string {
   if (!img) return "";
   return typeof img === "string" ? img : img.url;
+}
+
+/**
+ * Backward-compatible check for whether an image/variant is in stock.
+ * Legacy string entries and entries without `inStock` default to true.
+ */
+export function isImageInStock(img: ProductImage | string | undefined): boolean {
+  if (!img) return false;
+  if (typeof img === "string") return true;
+  return img.inStock !== false;
+}
+
+/**
+ * Returns the first in-stock image, or the first image as fallback.
+ */
+export function firstInStockImage(
+  images: (ProductImage | string)[] | undefined,
+): ProductImage | string | undefined {
+  if (!images || images.length === 0) return undefined;
+  return images.find(isImageInStock) ?? images[0];
 }
 
 export interface FirestoreProduct {
@@ -64,12 +88,35 @@ export async function updateProduct(id: string, input: Partial<ProductInput>) {
   });
 }
 
-// NOTE: This only deletes the Firestore document. Cloudinary images are NOT
-// removed here because deletion requires the Cloudinary API secret, which
-// must never be exposed to the browser. Implement image deletion later via a
-// secure Firebase Cloud Function that stores the secret in server-side config.
-export async function deleteProduct(id: string) {
-  return deleteDoc(doc(db, "products", id));
+// Secure deletion is handled by a deployed Firebase Cloud Function that
+// removes the Cloudinary images (via publicId) and the Firestore document
+// atomically. The direct client-side deleteDoc path has been removed to
+// avoid orphaning Cloudinary assets.
+const DELETE_PRODUCT_FN_URL =
+  "https://deleteproduct-qiuyb6g4mq-uc.a.run.app";
+
+export async function deleteProduct(id: string): Promise<void> {
+  const res = await fetch(DELETE_PRODUCT_FN_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ productId: id }),
+  });
+  if (!res.ok) {
+    let msg = `Delete failed (${res.status})`;
+    try {
+      const data = await res.json();
+      if (data && typeof data === "object") {
+        msg =
+          (data as { error?: string; message?: string }).error ??
+          (data as { message?: string }).message ??
+          msg;
+      }
+    } catch {
+      const text = await res.text().catch(() => "");
+      if (text) msg = text;
+    }
+    throw new Error(msg);
+  }
 }
 
 export async function getProduct(id: string): Promise<FirestoreProduct | null> {

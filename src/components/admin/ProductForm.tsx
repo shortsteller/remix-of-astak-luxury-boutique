@@ -1,10 +1,9 @@
 import { useRef, useState } from "react";
-import { ImagePlus, X } from "lucide-react";
+import { Check, ImagePlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { CATEGORIES } from "@/lib/store";
 import { uploadImagesToCloudinary } from "@/lib/cloudinary";
-import type { ProductInput, ProductImage, StockStatus } from "@/lib/firestore-products";
-import { getImageUrl } from "@/lib/firestore-products";
+import type { ProductInput, ProductImage } from "@/lib/firestore-products";
 
 interface Props {
   initial?: Partial<ProductInput>;
@@ -18,12 +17,14 @@ export function ProductForm({ initial, submitLabel, onSubmit }: Props) {
   const [price, setPrice] = useState<string>(initial?.price != null ? String(initial.price) : "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [images, setImages] = useState<ProductImage[]>(
-    // Normalize any legacy string entries into the new { url, publicId } shape.
+    // Normalize legacy entries (string, or missing inStock) into the new
+    // { url, publicId, inStock } shape. Default missing stock to true.
     (initial?.images ?? []).map((img) =>
-      typeof img === "string" ? { url: img, publicId: "" } : img,
+      typeof img === "string"
+        ? { url: img, publicId: "", inStock: true }
+        : { ...img, inStock: img.inStock !== false },
     ),
   );
-  const [stockStatus, setStockStatus] = useState<StockStatus>(initial?.stockStatus ?? "in-stock");
   const [showOnHomepage, setShowOnHomepage] = useState<boolean>(initial?.showOnHomepage ?? false);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -34,7 +35,10 @@ export function ProductForm({ initial, submitLabel, onSubmit }: Props) {
     setUploading(true);
     try {
       const uploaded = await uploadImagesToCloudinary(Array.from(files));
-      setImages((prev) => [...prev, ...uploaded]);
+      setImages((prev) => [
+        ...prev,
+        ...uploaded.map((u) => ({ ...u, inStock: true })),
+      ]);
       toast.success(`Uploaded ${uploaded.length} image(s)`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed");
@@ -45,6 +49,13 @@ export function ProductForm({ initial, submitLabel, onSubmit }: Props) {
 
   const removeImage = (url: string) =>
     setImages((prev) => prev.filter((img) => img.url !== url));
+
+  const toggleImageStock = (url: string) =>
+    setImages((prev) =>
+      prev.map((img) =>
+        img.url === url ? { ...img, inStock: img.inStock === false } : img,
+      ),
+    );
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,13 +70,14 @@ export function ProductForm({ initial, submitLabel, onSubmit }: Props) {
     }
     setSubmitting(true);
     try {
+      const anyInStock = images.some((img) => img.inStock !== false);
       await onSubmit({
         name: name.trim(),
         category,
         price: priceNum,
         description: description.trim(),
         images,
-        stockStatus,
+        stockStatus: anyInStock ? "in-stock" : "out-of-stock",
         showOnHomepage,
       });
     } finally {
@@ -143,47 +155,71 @@ export function ProductForm({ initial, submitLabel, onSubmit }: Props) {
           </span>
         </button>
         {images.length > 0 && (
-          <div className="mt-4 grid grid-cols-3 sm:grid-cols-4 gap-3">
-            {images.map((img) => (
-              <div key={img.url} className="relative aspect-square rounded-md overflow-hidden bg-muted border border-border">
-                <img src={img.url} alt="Product" className="w-full h-full object-cover" />
-                <button
-                  type="button"
-                  onClick={() => removeImage(img.url)}
-                  className="absolute top-1 right-1 h-7 w-7 rounded-full bg-background/90 border border-border grid place-items-center hover:bg-destructive hover:text-destructive-foreground transition"
-                  aria-label="Remove image"
+          <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {images.map((img, i) => {
+              const inStock = img.inStock !== false;
+              return (
+                <div
+                  key={img.url}
+                  className="rounded-md overflow-hidden bg-muted border border-border flex flex-col"
                 >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            ))}
+                  <div className="relative aspect-square">
+                    <img
+                      src={img.url}
+                      alt={`Option ${i + 1}`}
+                      className={`w-full h-full object-cover transition ${
+                        inStock ? "" : "opacity-40 grayscale"
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(img.url)}
+                      className="absolute top-1 right-1 h-7 w-7 rounded-full bg-background/90 border border-border grid place-items-center hover:bg-destructive hover:text-destructive-foreground transition"
+                      aria-label="Remove image"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <div className="p-2 flex items-center justify-between gap-2 border-t border-border bg-background/60">
+                    <span className="text-[0.6rem] uppercase tracking-[0.22em] text-muted-foreground">
+                      Option {i + 1}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => toggleImageStock(img.url)}
+                      className={`inline-flex items-center gap-1 text-[0.6rem] uppercase tracking-[0.2em] px-2 py-1 rounded-full border transition ${
+                        inStock
+                          ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                          : "bg-red-100 text-red-700 border-red-200"
+                      }`}
+                    >
+                      {inStock ? (
+                        <>
+                          <Check className="h-3 w-3" /> In Stock
+                        </>
+                      ) : (
+                        "Out"
+                      )}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </Field>
 
-      <div className="grid gap-6 sm:grid-cols-2">
-        <Field label="Stock Status">
-          <select
-            value={stockStatus}
-            onChange={(e) => setStockStatus(e.target.value as StockStatus)}
-            className={fieldCls}
-          >
-            <option value="in-stock">In Stock</option>
-            <option value="out-of-stock">Out of Stock</option>
-          </select>
-        </Field>
-        <label className="flex items-center gap-3 pt-8">
-          <input
-            type="checkbox"
-            checked={showOnHomepage}
-            onChange={(e) => setShowOnHomepage(e.target.checked)}
-            className="h-4 w-4 accent-primary"
-          />
-          <span className="text-xs uppercase tracking-[0.22em] text-foreground/80">
-            Display on Homepage
-          </span>
-        </label>
-      </div>
+      <label className="flex items-center gap-3">
+        <input
+          type="checkbox"
+          checked={showOnHomepage}
+          onChange={(e) => setShowOnHomepage(e.target.checked)}
+          className="h-4 w-4 accent-primary"
+        />
+        <span className="text-xs uppercase tracking-[0.22em] text-foreground/80">
+          Display on Homepage
+        </span>
+      </label>
 
       <button
         type="submit"
