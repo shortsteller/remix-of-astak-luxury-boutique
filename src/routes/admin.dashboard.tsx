@@ -7,6 +7,7 @@ import {
   updateProduct,
   useProducts,
   getImageUrl,
+  firstInStockImage,
   type FirestoreProduct,
 } from "@/lib/firestore-products";
 import { useAuth } from "@/lib/auth-context";
@@ -159,10 +160,19 @@ function ProductAdminCard({ product }: { product: FirestoreProduct }) {
   const toggleStock = async () => {
     setBusy(true);
     try {
+      const nextInStock = !inStock;
+      // Apply to every variant so per-image stock stays consistent with the
+      // aggregate toggle from the dashboard.
+      const nextImages = product.images.map((img) =>
+        typeof img === "string"
+          ? { url: img, publicId: "", inStock: nextInStock }
+          : { ...img, inStock: nextInStock },
+      );
       await updateProduct(product.id, {
-        stockStatus: inStock ? "out-of-stock" : "in-stock",
+        images: nextImages,
+        stockStatus: nextInStock ? "in-stock" : "out-of-stock",
       });
-      toast.success(inStock ? "Marked out of stock" : "Marked in stock");
+      toast.success(nextInStock ? "Marked in stock" : "Marked out of stock");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Update failed");
     } finally {
@@ -194,11 +204,17 @@ function ProductAdminCard({ product }: { product: FirestoreProduct }) {
     }
   };
 
+  const thumb = firstInStockImage(product.images);
+
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden flex flex-col">
       <div className="relative aspect-square bg-muted">
-        {product.images[0] && (
-          <img src={getImageUrl(product.images[0])} alt={product.name} className="w-full h-full object-cover" />
+        {thumb && (
+          <img
+            src={getImageUrl(thumb)}
+            alt={product.name}
+            className="w-full h-full object-cover"
+          />
         )}
         <span
           className={`absolute top-3 left-3 text-[0.6rem] uppercase tracking-[0.2em] px-2 py-1 rounded-full ${
