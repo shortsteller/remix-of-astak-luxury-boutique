@@ -1,8 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Heart, MessageCircle, Share2, ShoppingBag } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useProduct, getImageUrl } from "@/lib/firestore-products";
+import { useProduct, getImageUrl, isImageInStock } from "@/lib/firestore-products";
 import { WHATSAPP_NUMBER } from "@/lib/firebase";
 import { CATEGORIES, useStore } from "@/lib/store";
 
@@ -20,7 +20,15 @@ function ProductDetails() {
   const { id } = Route.useParams();
   const { product, loading } = useProduct(id);
   const { addToCart, toggleWishlist, isWishlisted } = useStore();
-  const [activeIdx, setActiveIdx] = useState(0);
+  const [activeIdx, setActiveIdx] = useState<number | null>(null);
+
+  // Default the active option to the first in-stock variant.
+  const defaultIdx = useMemo(() => {
+    if (!product) return 0;
+    const idx = product.images.findIndex(isImageInStock);
+    return idx >= 0 ? idx : 0;
+  }, [product]);
+  const selectedIdx = activeIdx ?? defaultIdx;
 
   if (loading) {
     return (
@@ -42,8 +50,10 @@ function ProductDetails() {
 
   const catLabel = CATEGORIES.find((c) => c.slug === product.category)?.label ?? product.category;
   const wished = isWishlisted(product.id);
-  const active = getImageUrl(product.images[activeIdx] ?? product.images[0]);
-  const firstImage = getImageUrl(product.images[0]);
+  const activeImage = product.images[selectedIdx] ?? product.images[0];
+  const active = getImageUrl(activeImage);
+  const selectedInStock = isImageInStock(activeImage);
+  const firstImage = getImageUrl(activeImage);
 
   const cartProduct = {
     id: product.id,
@@ -54,6 +64,7 @@ function ProductDetails() {
   };
 
   const orderOnWhatsApp = () => {
+    if (!selectedInStock) return;
     const url = typeof window !== "undefined" ? window.location.href : "";
     const text = `Hello Astak, I'd like to order:\n\n• ${product.name}\n  Price: ₹${product.price.toLocaleString("en-IN")}\n  ${url}\n\nPlease share availability and next steps.`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`, "_blank");
@@ -85,21 +96,40 @@ function ProductDetails() {
         {/* Gallery */}
         <div>
           <div className="relative aspect-[3/4] rounded-lg overflow-hidden bg-muted">
-            <img src={active} alt={product.name} className="w-full h-full object-cover" />
+            <img
+              src={active}
+              alt={product.name}
+              className={`w-full h-full object-cover transition ${
+                selectedInStock ? "" : "opacity-50 grayscale"
+              }`}
+            />
+            {!selectedInStock && (
+              <span className="absolute top-3 left-3 text-[0.65rem] uppercase tracking-[0.22em] px-3 py-1 rounded-full bg-red-100 text-red-700">
+                Out of Stock
+              </span>
+            )}
           </div>
           {product.images.length > 1 && (
             <div className="mt-4 grid grid-cols-5 gap-2">
               {product.images.map((img, i) => {
                 const url = getImageUrl(img);
+                const optionInStock = isImageInStock(img);
                 return (
                 <button
                   key={url}
                   onClick={() => setActiveIdx(i)}
                   className={`aspect-square rounded overflow-hidden border transition ${
-                    i === activeIdx ? "border-primary" : "border-border hover:border-primary/40"
+                    i === selectedIdx ? "border-primary" : "border-border hover:border-primary/40"
                   }`}
+                  aria-label={`Option ${i + 1}${optionInStock ? "" : " (out of stock)"}`}
                 >
-                  <img src={url} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
+                  <img
+                    src={url}
+                    alt={`${product.name} ${i + 1}`}
+                    className={`w-full h-full object-cover transition ${
+                      optionInStock ? "" : "opacity-40 grayscale"
+                    }`}
+                  />
                 </button>
                 );
               })}
@@ -111,16 +141,20 @@ function ProductDetails() {
         <div>
           <p className="text-[0.65rem] uppercase tracking-[0.4em] text-muted-foreground">{catLabel}</p>
           <h1 className="mt-3 font-heading text-3xl sm:text-4xl">{product.name}</h1>
-          <p className="mt-4 font-heading text-2xl text-primary">₹{product.price.toLocaleString("en-IN")}</p>
+          {selectedInStock && (
+            <p className="mt-4 font-heading text-2xl text-primary">
+              ₹{product.price.toLocaleString("en-IN")}
+            </p>
+          )}
 
           <span
             className={`inline-block mt-4 text-[0.65rem] uppercase tracking-[0.22em] px-3 py-1 rounded-full ${
-              product.stockStatus === "in-stock"
+              selectedInStock
                 ? "bg-emerald-100 text-emerald-700"
                 : "bg-red-100 text-red-700"
             }`}
           >
-            {product.stockStatus === "in-stock" ? "In Stock" : "Out of Stock"}
+            Option {selectedIdx + 1} · {selectedInStock ? "In Stock" : "Out of Stock"}
           </span>
 
           {product.description && (
@@ -132,8 +166,12 @@ function ProductDetails() {
           <div className="mt-8 grid gap-3">
             <div className="grid grid-cols-2 gap-3">
               <button
-                onClick={() => { addToCart(cartProduct); toast.success("Added to bag"); }}
-                disabled={product.stockStatus === "out-of-stock"}
+                onClick={() => {
+                  if (!selectedInStock) return;
+                  addToCart(cartProduct);
+                  toast.success("Added to bag");
+                }}
+                disabled={!selectedInStock}
                 className="inline-flex items-center justify-center gap-2 h-11 rounded-full bg-primary text-primary-foreground text-[0.7rem] uppercase tracking-[0.22em] hover:opacity-90 transition disabled:opacity-50"
               >
                 <ShoppingBag className="h-4 w-4" /> Add to Bag
@@ -147,7 +185,8 @@ function ProductDetails() {
             </div>
             <button
               onClick={orderOnWhatsApp}
-              className="inline-flex items-center justify-center gap-2 h-11 rounded-full border border-border text-[0.7rem] uppercase tracking-[0.22em] hover:border-primary/40 hover:text-primary transition"
+              disabled={!selectedInStock}
+              className="inline-flex items-center justify-center gap-2 h-11 rounded-full border border-border text-[0.7rem] uppercase tracking-[0.22em] hover:border-primary/40 hover:text-primary transition disabled:opacity-50 disabled:pointer-events-none"
             >
               <MessageCircle className="h-4 w-4" /> Order on WhatsApp
             </button>
