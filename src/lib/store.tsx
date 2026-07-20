@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 
 export interface Product {
   id: string;
@@ -6,6 +6,10 @@ export interface Product {
   price: number;
   image?: string;
   category: string;
+  /** Aggregate availability. `false` blocks adding to bag. */
+  inStock?: boolean;
+  /** How many variants/images the source product has. */
+  variantCount?: number;
 }
 
 export interface CartItem extends Product {
@@ -22,6 +26,26 @@ interface StoreContextValue {
   isWishlisted: (id: string) => boolean;
   cartCount: number;
   wishlistCount: number;
+  /**
+   * Reconcile cart & wishlist with the current product catalog:
+   *   - Remove entries whose id no longer exists in the catalog.
+   *   - Refresh wishlist entries' name/price/image/stock/variantCount so the
+   *     UI reflects the latest source-of-truth.
+   * Cart line prices are intentionally left frozen at time-of-add.
+   */
+  syncCatalog: (
+    map: Map<
+      string,
+      {
+        name: string;
+        category: string;
+        price: number;
+        image: string;
+        inStock: boolean;
+        variantCount: number;
+      }
+    >,
+  ) => void;
 }
 
 const StoreContext = createContext<StoreContextValue | null>(null);
@@ -72,6 +96,38 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     );
   const isWishlisted = (id: string) => wishlist.some((i) => i.id === id);
 
+  const syncCatalog = useCallback<StoreContextValue["syncCatalog"]>((map) => {
+    setCart((prev) => {
+      const next = prev.filter((i) => map.has(i.id));
+      return next.length === prev.length ? prev : next;
+    });
+    setWishlist((prev) => {
+      let changed = false;
+      const next: Product[] = [];
+      for (const item of prev) {
+        const c = map.get(item.id);
+        if (!c) {
+          changed = true;
+          continue;
+        }
+        if (
+          item.name !== c.name ||
+          item.category !== c.category ||
+          item.price !== c.price ||
+          item.image !== c.image ||
+          item.inStock !== c.inStock ||
+          item.variantCount !== c.variantCount
+        ) {
+          changed = true;
+          next.push({ ...item, ...c });
+        } else {
+          next.push(item);
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, []);
+
   return (
     <StoreContext.Provider
       value={{
@@ -84,6 +140,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         isWishlisted,
         cartCount: hydrated ? cart.reduce((s, i) => s + i.quantity, 0) : 0,
         wishlistCount: hydrated ? wishlist.length : 0,
+        syncCatalog,
       }}
     >
       {children}
