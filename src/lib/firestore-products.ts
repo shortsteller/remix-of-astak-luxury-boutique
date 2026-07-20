@@ -23,6 +23,11 @@ export interface ProductImage {
    * treat `undefined` as in stock.
    */
   inStock?: boolean;
+  /**
+   * Per-image (variant) price override. Optional for backward compatibility;
+   * when absent, consumers should fall back to the product-level price.
+   */
+  price?: number;
 }
 
 /**
@@ -43,6 +48,28 @@ export function isImageInStock(img: ProductImage | string | undefined): boolean 
   if (!img) return false;
   if (typeof img === "string") return true;
   return img.inStock !== false;
+}
+
+/**
+ * Backward-compatible price accessor. Returns the variant price when set,
+ * otherwise the provided product-level fallback.
+ */
+export function getImagePrice(
+  img: ProductImage | string | undefined,
+  fallback: number,
+): number {
+  if (!img || typeof img === "string") return fallback;
+  return typeof img.price === "number" && Number.isFinite(img.price) ? img.price : fallback;
+}
+
+/**
+ * True when at least one variant is in stock.
+ */
+export function hasAnyInStock(
+  images: (ProductImage | string)[] | undefined,
+): boolean {
+  if (!images || images.length === 0) return false;
+  return images.some(isImageInStock);
 }
 
 /**
