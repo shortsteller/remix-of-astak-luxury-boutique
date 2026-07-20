@@ -7,8 +7,11 @@ import { toast } from "sonner";
 export function ProductCard({ product }: { product: Product }) {
   const { addToCart, toggleWishlist, isWishlisted } = useStore();
   const wished = isWishlisted(product.id);
+  const outOfStock = product.inStock === false;
+  const hasMore = (product.variantCount ?? 0) > 1;
 
   const orderOnWhatsApp = () => {
+    if (outOfStock) return;
     const text = `Hello Astak, I'd like to order:\n\n• ${product.name}\n  Price: ₹${product.price.toLocaleString("en-IN")}\n\nPlease share availability and next steps.`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`, "_blank");
   };
@@ -41,8 +44,15 @@ export function ProductCard({ product }: { product: Product }) {
           loading="lazy"
           width={1024}
           height={1024}
-          className="h-full w-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-105"
+          className={`h-full w-full object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-105 ${
+            outOfStock ? "opacity-50 grayscale" : ""
+          }`}
         />
+        {outOfStock && (
+          <span className="absolute bottom-3 left-3 text-[0.6rem] uppercase tracking-[0.22em] px-2.5 py-1 rounded-full bg-red-100 text-red-700">
+            Out of Stock
+          </span>
+        )}
       </Link>
       <button
           onClick={(e) => { e.preventDefault(); toggleWishlist(product); }}
@@ -63,18 +73,31 @@ export function ProductCard({ product }: { product: Product }) {
         <p className="mt-1 sm:mt-2 font-heading text-base sm:text-lg text-primary">
           ₹{product.price.toLocaleString("en-IN")}
         </p>
+        {hasMore && (
+          <p className="mt-1 text-[0.6rem] sm:text-[0.65rem] uppercase tracking-[0.22em] text-muted-foreground">
+            More options available
+          </p>
+        )}
 
         <div className="mt-3 sm:mt-4 grid gap-1.5 sm:gap-2">
           <button
-            onClick={() => { addToCart(product); toast.success("Added to bag"); }}
-            className="inline-flex items-center justify-center gap-2 h-9 sm:h-10 rounded-full bg-primary text-primary-foreground text-[0.65rem] sm:text-[0.7rem] uppercase tracking-[0.22em] transition-all hover:opacity-90"
+            onClick={() => {
+              if (outOfStock) return;
+              addToCart(product);
+              toast.success("Added to bag");
+            }}
+            disabled={outOfStock}
+            className="inline-flex items-center justify-center gap-2 h-9 sm:h-10 rounded-full bg-primary text-primary-foreground text-[0.65rem] sm:text-[0.7rem] uppercase tracking-[0.22em] transition-all hover:opacity-90 disabled:opacity-50 disabled:pointer-events-none"
           >
-            <ShoppingBag className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Add to Bag</span><span className="sm:hidden">Bag</span>
+            <ShoppingBag className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{outOfStock ? "Out of Stock" : "Add to Bag"}</span>
+            <span className="sm:hidden">{outOfStock ? "Out" : "Bag"}</span>
           </button>
           <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
             <button
               onClick={orderOnWhatsApp}
-              className="inline-flex items-center justify-center gap-1.5 h-9 sm:h-10 rounded-full border border-border bg-background text-[0.6rem] sm:text-[0.68rem] uppercase tracking-[0.18em] transition-all hover:border-primary/40 hover:text-primary"
+              disabled={outOfStock}
+              className="inline-flex items-center justify-center gap-1.5 h-9 sm:h-10 rounded-full border border-border bg-background text-[0.6rem] sm:text-[0.68rem] uppercase tracking-[0.18em] transition-all hover:border-primary/40 hover:text-primary disabled:opacity-50 disabled:pointer-events-none"
             >
               <MessageCircle className="h-3.5 w-3.5" /> <span className="hidden sm:inline">WhatsApp</span><span className="sm:hidden">Order</span>
             </button>

@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Heart, MessageCircle, Share2, ShoppingBag } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useProduct, getImageUrl, isImageInStock } from "@/lib/firestore-products";
+import { useProduct, getImageUrl, getImagePrice, isImageInStock } from "@/lib/firestore-products";
 import { WHATSAPP_NUMBER } from "@/lib/firebase";
 import { CATEGORIES, useStore } from "@/lib/store";
 
@@ -54,26 +54,29 @@ function ProductDetails() {
   const active = getImageUrl(activeImage);
   const selectedInStock = isImageInStock(activeImage);
   const firstImage = getImageUrl(activeImage);
+  const variantPrice = getImagePrice(activeImage, product.price);
 
   const cartProduct = {
     id: product.id,
     name: product.name,
-    price: product.price,
+    price: variantPrice,
     image: firstImage,
     category: product.category,
+    inStock: selectedInStock,
+    variantCount: product.images.length,
   };
 
   const orderOnWhatsApp = () => {
     if (!selectedInStock) return;
     const url = typeof window !== "undefined" ? window.location.href : "";
-    const text = `Hello Astak, I'd like to order:\n\n• ${product.name}\n  Price: ₹${product.price.toLocaleString("en-IN")}\n  ${url}\n\nPlease share availability and next steps.`;
+    const text = `Hello Astak, I'd like to order:\n\n• ${product.name}\n  Option: ${selectedIdx + 1}\n  Price: ₹${variantPrice.toLocaleString("en-IN")}\n  ${url}\n\nPlease share availability and next steps.`;
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`, "_blank");
   };
 
   const share = async () => {
     const shareData = {
       title: `${product.name} — Astak`,
-      text: `${product.name} · ₹${product.price.toLocaleString("en-IN")} — from Astak`,
+      text: `${product.name} · ₹${variantPrice.toLocaleString("en-IN")} — from Astak`,
       url: typeof window !== "undefined" ? window.location.href : "",
     };
     try {
@@ -143,7 +146,7 @@ function ProductDetails() {
           <h1 className="mt-3 font-heading text-3xl sm:text-4xl">{product.name}</h1>
           {selectedInStock && (
             <p className="mt-4 font-heading text-2xl text-primary">
-              ₹{product.price.toLocaleString("en-IN")}
+              ₹{variantPrice.toLocaleString("en-IN")}
             </p>
           )}
 

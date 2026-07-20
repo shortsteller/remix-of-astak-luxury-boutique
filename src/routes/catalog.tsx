@@ -2,7 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { CATEGORIES } from "@/lib/store";
-import { useProducts, getImageUrl, firstInStockImage } from "@/lib/firestore-products";
+import {
+  useProducts,
+  getImageUrl,
+  getImagePrice,
+  firstInStockImage,
+  hasAnyInStock,
+} from "@/lib/firestore-products";
 import { ProductCard } from "@/components/ProductCard";
 import { z } from "zod";
 
@@ -38,13 +44,18 @@ function Catalog() {
   }, [initialCategory]);
 
   const filtered = useMemo(() => {
-    let list = products.map((p) => ({
-      id: p.id,
-      name: p.name,
-      price: p.price,
-      image: getImageUrl(firstInStockImage(p.images)),
-      category: p.category,
-    }));
+    let list = products.map((p) => {
+      const first = firstInStockImage(p.images);
+      return {
+        id: p.id,
+        name: p.name,
+        price: getImagePrice(first, p.price),
+        image: getImageUrl(first),
+        category: p.category,
+        inStock: hasAnyInStock(p.images),
+        variantCount: p.images.length,
+      };
+    });
     if (category !== "all") list = list.filter((p) => p.category === category);
     if (query) list = list.filter((p) => p.name.toLowerCase().includes(query.toLowerCase()));
     if (sort === "asc") list.sort((a, b) => a.price - b.price);

@@ -17,8 +17,9 @@ export function ProductForm({ initial, submitLabel, onSubmit }: Props) {
   const [price, setPrice] = useState<string>(initial?.price != null ? String(initial.price) : "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [images, setImages] = useState<ProductImage[]>(
-    // Normalize legacy entries (string, or missing inStock) into the new
-    // { url, publicId, inStock } shape. Default missing stock to true.
+    // Normalize legacy entries (string, or missing inStock/price) into the
+    // new { url, publicId, inStock, price } shape. Default missing stock to
+    // true; leave price undefined so it falls back to the product-level price.
     (initial?.images ?? []).map((img) =>
       typeof img === "string"
         ? { url: img, publicId: "", inStock: true }
@@ -55,6 +56,21 @@ export function ProductForm({ initial, submitLabel, onSubmit }: Props) {
       prev.map((img) =>
         img.url === url ? { ...img, inStock: img.inStock === false } : img,
       ),
+    );
+
+  const setImagePrice = (url: string, value: string) =>
+    setImages((prev) =>
+      prev.map((img) => {
+        if (img.url !== url) return img;
+        if (value.trim() === "") {
+          const { price: _drop, ...rest } = img;
+          void _drop;
+          return rest;
+        }
+        const n = Number(value);
+        if (!Number.isFinite(n) || n < 0) return img;
+        return { ...img, price: n };
+      }),
     );
 
   const submit = async (e: React.FormEvent) => {
@@ -104,7 +120,7 @@ export function ProductForm({ initial, submitLabel, onSubmit }: Props) {
             ))}
           </select>
         </Field>
-        <Field label="Price (₹)">
+        <Field label="Default Price (₹)">
           <input
             required
             type="number"
@@ -180,27 +196,43 @@ export function ProductForm({ initial, submitLabel, onSubmit }: Props) {
                       <X className="h-3.5 w-3.5" />
                     </button>
                   </div>
-                  <div className="p-2 flex items-center justify-between gap-2 border-t border-border bg-background/60">
-                    <span className="text-[0.6rem] uppercase tracking-[0.22em] text-muted-foreground">
-                      Option {i + 1}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => toggleImageStock(img.url)}
-                      className={`inline-flex items-center gap-1 text-[0.6rem] uppercase tracking-[0.2em] px-2 py-1 rounded-full border transition ${
-                        inStock
-                          ? "bg-emerald-100 text-emerald-700 border-emerald-200"
-                          : "bg-red-100 text-red-700 border-red-200"
-                      }`}
-                    >
-                      {inStock ? (
-                        <>
-                          <Check className="h-3 w-3" /> In Stock
-                        </>
-                      ) : (
-                        "Out"
-                      )}
-                    </button>
+                  <div className="p-2 space-y-2 border-t border-border bg-background/60">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[0.6rem] uppercase tracking-[0.22em] text-muted-foreground">
+                        Option {i + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => toggleImageStock(img.url)}
+                        className={`inline-flex items-center gap-1 text-[0.6rem] uppercase tracking-[0.2em] px-2 py-1 rounded-full border transition ${
+                          inStock
+                            ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                            : "bg-red-100 text-red-700 border-red-200"
+                        }`}
+                      >
+                        {inStock ? (
+                          <>
+                            <Check className="h-3 w-3" /> In Stock
+                          </>
+                        ) : (
+                          "Out"
+                        )}
+                      </button>
+                    </div>
+                    <label className="flex items-center gap-2">
+                      <span className="text-[0.55rem] uppercase tracking-[0.2em] text-muted-foreground">
+                        ₹
+                      </span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={img.price ?? ""}
+                        placeholder={price || "0"}
+                        onChange={(e) => setImagePrice(img.url, e.target.value)}
+                        className="w-full h-8 rounded-md border border-border bg-background px-2 text-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      />
+                    </label>
                   </div>
                 </div>
               );
