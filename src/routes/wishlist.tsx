@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Heart, X } from "lucide-react";
 import { useStore } from "@/lib/store";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/wishlist")({
   head: () => ({ meta: [{ title: "Wishlist — Astak" }] }),
@@ -26,23 +27,50 @@ function Wishlist() {
         </div>
       ) : (
         <ul className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {wishlist.map((p) => (
-            <li key={p.id} className="rounded-md border border-border bg-card p-5 group">
-              <div className="aspect-[3/4] rounded-md bg-muted overflow-hidden">
-                {p.image ? <img src={p.image} alt={p.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" /> : null}
-              </div>
-              <div className="mt-4 flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="font-heading text-lg truncate">{p.name}</p>
-                  <p className="text-xs uppercase tracking-widest text-muted-foreground">₹{p.price.toLocaleString("en-IN")}</p>
+          {wishlist.map((p) => {
+            const outOfStock = p.inStock === false;
+            return (
+              <li key={p.id} className="rounded-md border border-border bg-card p-5 group">
+                <div className="relative aspect-[3/4] rounded-md bg-muted overflow-hidden">
+                  {p.image ? (
+                    <img
+                      src={p.image}
+                      alt={p.name}
+                      loading="lazy"
+                      className={`h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 ${
+                        outOfStock ? "opacity-50 grayscale" : ""
+                      }`}
+                    />
+                  ) : null}
+                  {outOfStock && (
+                    <span className="absolute top-3 left-3 text-[0.6rem] uppercase tracking-[0.22em] px-2.5 py-1 rounded-full bg-red-100 text-red-700">
+                      Out of Stock
+                    </span>
+                  )}
                 </div>
-                <button onClick={() => toggleWishlist(p)} className="p-1 text-muted-foreground hover:text-destructive">
-                  <X className="h-4 w-4" />
+                <div className="mt-4 flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-heading text-lg truncate">{p.name}</p>
+                    <p className="text-xs uppercase tracking-widest text-muted-foreground">₹{p.price.toLocaleString("en-IN")}</p>
+                  </div>
+                  <button onClick={() => toggleWishlist(p)} className="p-1 text-muted-foreground hover:text-destructive">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <button
+                  onClick={() => {
+                    if (outOfStock) return;
+                    addToCart(p);
+                    toast.success("Added to bag");
+                  }}
+                  disabled={outOfStock}
+                  className="btn-ghost-luxe w-full justify-center mt-4 disabled:opacity-50 disabled:pointer-events-none"
+                >
+                  {outOfStock ? "Out of Stock" : "Add to Bag"}
                 </button>
-              </div>
-              <button onClick={() => addToCart(p)} className="btn-ghost-luxe w-full justify-center mt-4">Add to Bag</button>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
