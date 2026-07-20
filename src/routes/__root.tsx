@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { ScrollToTop } from "../components/ScrollToTop";
+import { CartSync } from "../components/CartSync";
 import { StoreProvider } from "../lib/store";
 import { Toaster } from "sonner";
 import { AuthProvider } from "../lib/auth-context";
@@ -128,6 +129,7 @@ function RootInner() {
       </main>
       <Footer />
       <ScrollToTop />
+      <CartSync />
       <Toaster position="bottom-center" theme={theme} />
     </div>
   );
